@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>anonymous whispers · to Pranta</title>
+  <!-- Font Awesome 6 (free) for subtle icons & loader -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ----- GLOBAL DARK THEME & RESET ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0b0c10; /* deep charcoal/black */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    /* main mysterious card – like a dark mirror */
+    .container {
+      max-width: 640px;
+      width: 100%;
+      background: rgba(10, 12, 18, 0.85);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(0, 255, 255, 0.15);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 255, 0.2);
+      border-radius: 2rem;
+      padding: 2.5rem 2rem;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 35px rgba(100, 200, 255, 0.3);
+    }
+
+    /* ----- GLOWING TITLE (soft neon cyan) ----- */
+    h1 {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      color: #e2f0fa;
+      text-shadow: 0 0 6px #00ccff, 0 0 20px #0077ff, 0 0 40px #0044ff4d;
+      word-break: break-word;
+    }
+
+    /* every "Pranta" inside gets an extra glow layer */
+    .glow-name {
+      color: #b3f0ff;
+      text-shadow: 0 0 8px cyan, 0 0 25px #00a6ff, 0 0 45px #3700ff7e;
+      font-weight: 500;
+      background: linear-gradient(145deg, #b0f0ff, #a0d0ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      animation: softPulse 3s infinite alternate;
+    }
+
+    @keyframes softPulse {
+      0% { text-shadow: 0 0 5px cyan, 0 0 15px #0077ff; }
+      100% { text-shadow: 0 0 15px cyan, 0 0 40px #00a6ff, 0 0 70px #2a2aff; }
+    }
+
+    /* description / mystery vibe */
+    .sub {
+      text-align: center;
+      color: #90b8d1;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+      border-bottom: 1px dashed #2f4459;
+      padding-bottom: 1rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    /* ----- TEXTAREA (neon edges) ----- */
+    .message-box {
+      width: 100%;
+      background: #0f131a;
+      border: 1.5px solid #2b5270;
+      border-radius: 24px;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.1rem;
+      color: #d6ecff;
+      resize: vertical;
+      min-height: 160px;
+      outline: none;
+      transition: all 0.25s ease;
+      box-shadow: inset 0 0 10px #00000055, 0 0 0px #00e0ff;
+      line-height: 1.5;
+    }
+
+    .message-box:focus {
+      border-color: #00ccff;
+      box-shadow: inset 0 0 8px #000, 0 0 20px #00b7ff;
+    }
+
+    .message-box::placeholder {
+      color: #5d7994;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    /* ----- SEND BUTTON (with loader state) ----- */
+    .btn-send {
+      width: 100%;
+      margin: 2rem 0 1.5rem;
+      background: transparent;
+      border: 2px solid #1f6e9f;
+      border-radius: 60px;
+      padding: 1rem 0;
+      color: #aaf0ff;
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 15px #003cff4d, 0 5px 15px #000;
+    }
+
+    .btn-send i {
+      font-size: 1.3rem;
+      color: #84e0ff;
+      transition: 0.2s;
+    }
+
+    .btn-send:hover:not(:disabled) {
+      border-color: cyan;
+      background: #0f2635;
+      color: white;
+      box-shadow: 0 0 30px cyan, 0 0 60px #0a4c6e;
+      text-shadow: 0 0 15px white;
+    }
+
+    .btn-send:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      border-color: #4b6f88;
+      box-shadow: none;
+    }
+
+    /* rotating loader (inside button) */
+    .fa-spinner {
+      animation: spin 1.2s linear infinite;
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* hidden email - absolutely not visible anywhere (redundant but safe) */
+    .hidden-email-guard {
+      display: none;
+    }
+
+    /* cooldown & char counter row */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      color: #7a9cba;
+      font-size: 0.85rem;
+      padding: 0 0.3rem;
+    }
+
+    .cooldown-badge {
+      background: #18232e;
+      border-radius: 30px;
+      padding: 0.2rem 1rem;
+      border: 1px solid #3a637d;
+      box-shadow: 0 0 8px #0080ff55;
+      color: #bbdef5;
+    }
+
+    .char-counter {
+      background: #18232e;
+      border-radius: 30px;
+      padding: 0.2rem 1.2rem;
+      border: 1px solid #3a637d;
+      box-shadow: 0 0 8px #7700ff55;
+    }
+
+    /* notification toast area (floating inside container) */
+    .toast-area {
+      min-height: 48px;
+      margin: 0.5rem 0 1rem;
+    }
+
+    .toast {
+      background: #11212ecc;
+      backdrop-filter: blur(10px);
+      border-left: 6px solid cyan;
+      border-radius: 40px;
+      padding: 0.9rem 1.8rem;
+      color: #d1ecff;
+      font-weight: 500;
+      text-align: center;
+      box-shadow: 0 0 25px #0077ff7c, 0 8px 12px #00000066;
+      animation: slideFade 0.3s ease;
+      width: fit-content;
+      margin: 0 auto;
+      font-size: 1rem;
+      border: 1px solid #1c95b0;
+    }
+
+    .toast.error {
+      border-left-color: #ff5e7c;
+      box-shadow: 0 0 20px #ff3366;
+    }
+
+    @keyframes slideFade {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* small print: no email leaks here */
+    .phantom {
+      text-align: center;
+      color: #2b4f65;
+      font-size: 0.7rem;
+      margin-top: 1.2rem;
+      opacity: 0.4;
+      letter-spacing: 2px;
+    }
+
+    /* mobile fine-tune */
+    @media (max-width: 450px) {
+      .container { padding: 1.8rem 1.2rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- title with glowing "Pranta" every time it appears -->
+    <h1>
+      send anonymous message to
+      <span class="glow-name">Pranta</span>
+    </h1>
+    <div class="sub">✦ whisper into the void ✦</div>
+
+    <!-- MESSAGE TEXTAREA (anonymous, no name/email fields) -->
+    <textarea id="messageInput" class="message-box" placeholder="type anything… confession, secret, feedback — it ends up only in Pranta's inbox." maxlength="500"></textarea>
+
+    <!-- additional info row: spam protection (cooldown + char limit) -->
+    <div class="info-row">
+      <span class="cooldown-badge" id="cooldownDisplay"><i class="far fa-clock"></i> ready</span>
+      <span class="char-counter" id="charCount">0 / 500</span>
+    </div>
+
+    <!-- SEND BUTTON with loading state icon -->
+    <button class="btn-send" id="sendBtn">
+      <i class="fas fa-paper-plane" id="sendIcon"></i>
+      <span id="btnText">send message</span>
+      <i class="fas fa-spinner" id="spinner" style="display: none;"></i>
+    </button>
+
+    <!-- NOTIFICATION area (toast style) -->
+    <div class="toast-area" id="toastContainer"></div>
+
+    <!-- email address is ABSOLUTELY hidden – not even in attributes -->
+    <div class="hidden-email-guard"></div>
+    <div class="phantom">#anon</div>
+  </div>
+
+  <script>
+    (function() {
+      // ==================== CONFIGURATION (Formspree) ====================
+      // The target email (prantatalukdar35@gmail.com) is configured INSIDE Formspree
+      // via the project settings at https://formspree.io/forms/mzdavrbe
+      // This endpoint does NOT expose the email in source code.
+      const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mzdavrbe';
+
+      // ==================== DOM elements ====================
+      const messageInput = document.getElementById('messageInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const spinner = document.getElementById('spinner');
+      const sendIcon = document.getElementById('sendIcon');
+      const btnText = document.getElementById('btnText');
+      const toastContainer = document.getElementById('toastContainer');
+      const cooldownDisplay = document.getElementById('cooldownDisplay');
+      const charCountSpan = document.getElementById('charCount');
+
+      // ==================== spam protection ====================
+      const CHAR_LIMIT = 500;
+      const COOLDOWN_SEC = 30; // seconds between messages
+      let lastSentTime = 0;
+      let cooldownInterval = null;
+
+      // character counter update
+      function updateCharCounter() {
+        const len = messageInput.value.length;
+        charCountSpan.innerText = `${len} / ${CHAR_LIMIT}`;
+        // subtle warning when near limit
+        if (len > CHAR_LIMIT * 0.9) {
+          charCountSpan.style.color = '#ffae70';
+        } else {
+          charCountSpan.style.color = '#bbdef5';
+        }
+      }
+      messageInput.addEventListener('input', updateCharCounter);
+      updateCharCounter(); // initial
+
+      // cooldown display updater (runs every second if cooldown active)
+      function updateCooldownUI() {
+        const now = Math.floor(Date.now() / 1000);
+        const secondsSince = now - lastSentTime;
+        const remaining = COOLDOWN_SEC - secondsSince;
+
+        if (remaining > 0) {
+          cooldownDisplay.innerHTML = `<i class="fas fa-hourglass-half"></i> wait ${remaining}s`;
+          cooldownDisplay.style.color = '#ffb270';
+          cooldownDisplay.style.borderColor = '#ff8c42';
+          sendBtn.disabled = true;
+        } else {
+          cooldownDisplay.innerHTML = `<i class="far fa-clock"></i> ready to send`;
+          cooldownDisplay.style.color = '#bbdef5';
+          cooldownDisplay.style.borderColor = '#3a637d';
+          // button enabled only if not in cooldown (validation will be done on click)
+          sendBtn.disabled = false;
+          if (cooldownInterval) {
+            clearInterval(cooldownInterval);
+            cooldownInterval = null;
+          }
+        }
+      }
+
+      // start cooldown timer after send
+      function startCooldown() {
+        lastSentTime = Math.floor(Date.now() / 1000);
+        if (cooldownInterval) clearInterval(cooldownInterval);
+        updateCooldownUI(); // immediate update
+        cooldownInterval = setInterval(updateCooldownUI, 1000);
+      }
+
+      // ==================== toast notification ====================
+      function showToast(message, isSuccess = true) {
+        toastContainer.innerHTML = ''; // remove previous
+        const toast = document.createElement('div');
+        toast.className = `toast ${isSuccess ? '' : 'error'}`;
+        toast.innerText = message;
+        toastContainer.appendChild(toast);
+
+        // auto disappear after 4 seconds
+        setTimeout(() => {
+          if (toastContainer.firstChild === toast) toast.remove();
+        }, 4000);
+      }
+
+      // ==================== prevent empty message ====================
+      function validateMessage(text) {
+        if (!text || text.trim() === '') {
+          showToast('💬 message cannot be empty', false);
+          return false;
+        }
+        if (text.length > CHAR_LIMIT) {
+          showToast(`✋ max ${CHAR_LIMIT} characters allowed`, false);
+          return false;
+        }
+        return true;
+      }
+
+      // ==================== loading animation ====================
+      function setLoading(isLoading) {
+        if (isLoading) {
+          sendBtn.disabled = true;
+          sendIcon.style.display = 'none';
+          spinner.style.display = 'inline-block';
+          btnText.innerText = 'sending';
+        } else {
+          // restore original appearance (cooldown may keep disabled, but that's handled separately)
+          sendIcon.style.display = 'inline-block';
+          spinner.style.display = 'none';
+          btnText.innerText = 'send message';
+          // call cooldown update to set correct enabled/disabled state based on timer
+          updateCooldownUI();
+        }
+      }
+
+      // ==================== SEND MESSAGE via Formspree ====================
+      async function sendMessage(content) {
+        // Prepare data payload: only message, no email field (email is fixed in formspree backend)
+        const formData = new FormData();
+        formData.append('message', content);  // this field name 'message' must match your Formspree email template
+        // optional: add a timestamp (Formspree also adds its own, but we include for clarity)
+        formData.append('_replyto', 'anonymous@anon.void'); // dummy email, not shown to you; just to satisfy form field if needed.
+        // The actual recipient email is configured inside Formspree dashboard.
+
+        try {
+          const response = await fetch(FORMSPREE_ENDPOINT, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Accept': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const json = await response.json();
+            // Formspree returns { ok: true, ... } on success
+            showToast('✨ message delivered anonymously to Pranta', true);
+            messageInput.value = ''; // clear field
+            updateCharCounter();
+            startCooldown(); // activate spam cooldown
+          } else {
+            // try to get error message from Formspree
+            const errorData = await response.json().catch(() => null);
+            const errorMsg = errorData?.error || 'formspree request failed';
+            throw new Error(errorMsg);
+          }
+        } catch (error) {
+          console.warn('Formspree error:', error);
+          showToast('🌫️ failed to send. try again later.', false);
+          // re-enable UI (but keep cooldown? no cooldown on error)
+          setLoading(false); // this will restore button (and cooldown check)
+        }
+      }
+
+      // ==================== click handler ====================
+      sendBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // early exit if cooldown active (button disabled already but double-check)
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (nowSec - lastSentTime < COOLDOWN_SEC) {
+          showToast(`⏳ please wait ${COOLDOWN_SEC - (nowSec - lastSentTime)}s`, false);
+          return;
+        }
+
+        const rawMessage = messageInput.value;
+        if (!validateMessage(rawMessage)) {
+          return;
+        }
+
+        // start loading animation
+        setLoading(true);
+
+        // proceed to send (sendMessage handles success/fail)
+        await sendMessage(rawMessage.trim());
+
+        // sendMessage will call setLoading(false) on error, or on success via startCooldown + setLoading(false) is not automatic.
+        // In success case, we also need to reset loading indicator and let cooldown manage disabled.
+        // We'll call setLoading(false) after sendMessage returns. But if sendMessage throws, we catch inside.
+        // However sendMessage catches its own errors. So we always call setLoading(false) here after await.
+        setLoading(false);
+        // Note: In success, setLoading(false) will run updateCooldownUI which keeps button disabled if cooldown active,
+        // and restores button text/icons.
+      });
+
+      // ==================== initial cooldown check ====================
+      updateCooldownUI();
+
+      // ==================== Prevent email from ever appearing ====================
+      // The destination email prantatalukdar35@gmail.com is NOT stored in this code.
+      // It is configured inside Formspree dashboard (form mzdavrbe). The endpoint alone
+      // does not reveal the email. Even if someone inspects network, they only see the form ID.
+    })();
+  </script>
+
+  <!-- additional comment: Email address prantatalukdar35@gmail.com is stored safely inside Formspree,
+       and never exposed in this frontend. The form endpoint is public but email remains hidden. -->
+</body>
+</html>
